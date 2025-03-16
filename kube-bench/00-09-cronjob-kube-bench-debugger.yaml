@@ -1,0 +1,12 @@
+---
+apiVersion: batch/v1
+kind: Pod
+metadata:
+  name: kube-bench-debugger
+spec:
+  hostPID: true
+  containers:
+    - name: kube-bench
+      image: docker.io/aquasec/kube-bench:latest
+      command: ["sleep", "7200"]
+  restartPolicy: Never

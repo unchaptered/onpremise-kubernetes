@@ -9,4 +9,3 @@ spec:
     - name: kube-bench
       image: docker.io/aquasec/kube-bench:latest
       command: ["sleep", "7200"]
-  restartPolicy: Never

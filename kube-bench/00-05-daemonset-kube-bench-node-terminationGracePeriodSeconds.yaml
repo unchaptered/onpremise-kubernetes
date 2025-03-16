@@ -1,4 +1,3 @@
-```yaml
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -13,14 +12,11 @@ spec:
         app: kube-bench-node
     spec:
       hostPID: true
+      terminationGracePeriodSeconds: 60
       containers:
         - name: kube-bench
           image: docker.io/aquasec/kube-bench:latest
           command: ["kube-bench", "run", "--targets", "node"]
-          lifecycle:
-            preStop:
-              exec:
-                command: ["/bin/sh", "-c", "echo 'Starting graceful shutdown'; sleep 60; echo 'Shutdown complete'"]
           volumeMounts:
             - name: var-lib-cni
               mountPath: /var/lib/cni
@@ -95,4 +91,3 @@ spec:
         - name: opt-cni-bin
           hostPath:
             path: "/opt/cni/bin/"
-```

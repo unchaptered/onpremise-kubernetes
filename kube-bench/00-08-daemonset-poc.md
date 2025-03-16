@@ -1,0 +1,49 @@
+```yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cron-killer-poc
+spec:
+  selector:
+    matchLabels:
+      app: cron-killer-poc
+  template:
+    metadata:
+      labels:
+        app: cron-killer-poc
+    spec:
+      containers:
+        - name: self-terminator
+          image: alpine:latest
+          env:
+            - name: SLEEP_SECONDS
+              value: "300"  # 5분을 초로 표현
+            - name: CRON_SCHEDULE
+              value: "*/5 * * * *"  # 5분마다 실행
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              # 필요한 패키지 설치
+              apk add --no-cache dcron
+              
+              # 환경 변수에 지정된 시간 동안 대기하는 sleep 명령어를 백그라운드로 실행
+              echo "Sleep 시작: $SLEEP_SECONDS 초 동안 대기"
+              sleep $SLEEP_SECONDS &
+              
+              # Sleep 프로세스의 PID를 저장
+              SLEEP_PID=$!
+              echo "Sleep 프로세스 시작됨, PID: $SLEEP_PID"
+              
+              # 지정된 스케줄에 sleep 프로세스를 종료하는 cron 작업 생성
+              echo "$CRON_SCHEDULE kill -9 $SLEEP_PID" > /tmp/crontab
+              crontab /tmp/crontab
+              echo "Cron 작업 설정됨: $CRON_SCHEDULE"
+              
+              # cron 서비스 시작
+              crond -b -l 8
+              
+              # sleep 프로세스가 종료될 때까지 대기
+              wait $SLEEP_PID
+              
+              echo "Sleep 프로세스가 종료되었습니다. 컨테이너가 곧 종료됩니다."
+```

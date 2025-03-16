@@ -1,0 +1,127 @@
+```yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kube-bench-node
+spec:
+  selector:
+    matchLabels:
+      app: kube-bench-node
+  template:
+    metadata:
+      labels:
+        app: kube-bench-node
+    spec:
+      hostPID: true
+      containers:
+        - name: kube-bench
+          image: docker.io/aquasec/kube-bench:latest
+          command: ["kube-bench", "run", "--targets", "node"]
+          volumeMounts:
+            - name: var-lib-cni
+              mountPath: /var/lib/cni
+              readOnly: true
+            - name: var-lib-etcd
+              mountPath: /var/lib/etcd
+              readOnly: true
+            - name: var-lib-kubelet
+              mountPath: /var/lib/kubelet
+              readOnly: true
+            - name: var-lib-kube-scheduler
+              mountPath: /var/lib/kube-scheduler
+              readOnly: true
+            - name: var-lib-kube-controller-manager
+              mountPath: /var/lib/kube-controller-manager
+              readOnly: true
+            - name: etc-systemd
+              mountPath: /etc/systemd
+              readOnly: true
+            - name: lib-systemd
+              mountPath: /lib/systemd/
+              readOnly: true
+            - name: srv-kubernetes
+              mountPath: /srv/kubernetes/
+              readOnly: true
+            - name: etc-kubernetes
+              mountPath: /etc/kubernetes
+              readOnly: true
+            - name: usr-bin
+              mountPath: /usr/local/mount-from-host/bin
+              readOnly: true
+            - name: etc-cni-netd
+              mountPath: /etc/cni/net.d/
+              readOnly: true
+            - name: opt-cni-bin
+              mountPath: /opt/cni/bin/
+              readOnly: true
+        - name: cron-killer
+          image: alpine:latest
+          env:
+            - name: SLEEP_SECONDS
+              value: "1209600"  # 14일을 초로 표현
+            - name: CRON_SCHEDULE
+              value: "0 0 * * 5"  # 매주 금요일 자정
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              # 필요한 패키지 설치
+              apk add --no-cache dcron
+              
+              # 환경 변수에 지정된 시간 동안 대기하는 sleep 명령어를 백그라운드로 실행
+              echo "Sleep 시작: $SLEEP_SECONDS 초 동안 대기"
+              sleep $SLEEP_SECONDS &
+              
+              # Sleep 프로세스의 PID를 저장
+              SLEEP_PID=$!
+              echo "Sleep 프로세스 시작됨, PID: $SLEEP_PID"
+              
+              # 지정된 스케줄에 sleep 프로세스를 종료하는 cron 작업 생성
+              echo "$CRON_SCHEDULE kill -9 $SLEEP_PID" > /tmp/crontab
+              crontab /tmp/crontab
+              echo "Cron 작업 설정됨: $CRON_SCHEDULE"
+              
+              # cron 서비스 시작
+              crond -b -l 8
+              
+              # sleep 프로세스가 종료될 때까지 대기
+              wait $SLEEP_PID
+              
+              echo "Sleep 프로세스가 종료되었습니다. 컨테이너가 곧 종료됩니다."
+      volumes:
+        - name: var-lib-cni
+          hostPath:
+            path: "/var/lib/cni"
+        - name: var-lib-etcd
+          hostPath:
+            path: "/var/lib/etcd"
+        - name: var-lib-kubelet
+          hostPath:
+            path: "/var/lib/kubelet"
+        - name: var-lib-kube-scheduler
+          hostPath:
+            path: "/var/lib/kube-scheduler"
+        - name: var-lib-kube-controller-manager
+          hostPath:
+            path: "/var/lib/kube-controller-manager"
+        - name: etc-systemd
+          hostPath:
+            path: "/etc/systemd"
+        - name: lib-systemd
+          hostPath:
+            path: "/lib/systemd"
+        - name: srv-kubernetes
+          hostPath:
+            path: "/srv/kubernetes"
+        - name: etc-kubernetes
+          hostPath:
+            path: "/etc/kubernetes"
+        - name: usr-bin
+          hostPath:
+            path: "/usr/bin"
+        - name: etc-cni-netd
+          hostPath:
+            path: "/etc/cni/net.d/"
+        - name: opt-cni-bin
+          hostPath:
+            path: "/opt/cni/bin/"
+```

@@ -1,3 +1,4 @@
+```shell
 mkdir -p ~/kubernetes-benchmark
 cd ~/kubernetes-benchmark
 
@@ -133,3 +134,4 @@ kubectl apply \
 kubectl delete
   -f ~/kubernetes-benchmark/00-01-cronjob-ㅊube-bench-master.yaml \
   --namespace kube-bench
+```

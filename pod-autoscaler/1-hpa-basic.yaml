@@ -39,6 +39,7 @@ spec:
     spec:
       containers:
       - name: hpa-01-basic
+        image: nginx
         resources:
           requests:
             cpu: 200m

@@ -1,0 +1,6 @@
+[submodule "spring-boot/java-maven"]
+	path = spring-boot/java-maven
+	url = https://github.com/felipemeriga/DevOps-Example
+[submodule "spring-boot/kotlin-maven_gradle"]
+	path = spring-boot/kotlin-maven_gradle
+	url = https://github.com/spring-guides/tut-spring-boot-kotlin

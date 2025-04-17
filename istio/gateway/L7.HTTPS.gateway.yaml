@@ -1,0 +1,18 @@
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: https-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE  # TLS termination
+      credentialName: my-tls-cert  # secret 이름 (cert + key)
+    hosts:
+    - "secure.example.com"
